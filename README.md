@@ -1,373 +1,342 @@
-# adaptive-cpu-gpu-scheduler
-Adaptive task scheduling framework that dynamically balances workloads between CPU and GPU based on runtime performance metrics.
-<![CDATA[# 🧠 Adaptive CPU–GPU Hybrid Scheduler for Real-Time Video & Image Processing
+# 🧠 Adaptive CPU–GPU Hybrid Scheduler
+
+### Intelligent Real-Time Video & Image Processing Using Adaptive Resource Scheduling
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch">
-  <img src="https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV">
-  <img src="https://img.shields.io/badge/Flask-3.x-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
-</p>
-
-<p align="center">
-  An intelligent, real-time processing pipeline that <b>dynamically schedules</b> each frame/image across <b>CPU</b>, <b>GPU</b>, or <b>hybrid</b> execution — powered by deep reinforcement learning.
+  <img src="https://img.shields.io/badge/Python-3.8+-blue" />
+  <img src="https://img.shields.io/badge/PyTorch-2.0+-red" />
+  <img src="https://img.shields.io/badge/OpenCV-4.x-green" />
+  <img src="https://img.shields.io/badge/Flask-3.x-black" />
+  <img src="https://img.shields.io/badge/License-MIT-brightgreen" />
 </p>
 
 ---
 
-## 📋 Table of Contents
+## 📌 Project Overview
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Architecture](#-architecture)
-- [How It Works](#-how-it-works)
-- [Image Processing Tasks](#-image-processing-tasks)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Configuration](#%EF%B8%8F-configuration)
-- [Project Structure](#-project-structure)
-- [Tech Stack](#-tech-stack)
-- [Future Improvements](#-future-improvements)
+The **Adaptive CPU-GPU Hybrid Scheduler** is an intelligent scheduling framework designed for real-time video and image processing applications.
+
+The system dynamically decides whether a task should run on the **CPU**, **GPU**, or a **Hybrid CPU-GPU execution mode** based on workload complexity and current system resource utilization.
+
+Instead of statically assigning tasks to a fixed processor, the scheduler continuously analyzes system performance and automatically selects the most efficient execution strategy.
 
 ---
 
-## 🔍 Overview
+## 🎯 Problem Statement
 
-This project implements an **adaptive scheduling system** that intelligently routes computational workloads between CPU and GPU resources in real time. Instead of statically assigning tasks to a fixed device, the scheduler learns the optimal routing policy through online reinforcement learning.
+Traditional processing systems typically execute workloads either on the CPU or GPU regardless of task complexity.
 
-The scheduling decision is driven by three components:
+This often leads to:
 
-| Component | Role |
-|---|---|
-| **LSTM Predictor** | Predicts frame/image complexity from lightweight features using temporal sequences |
-| **DQN Agent** | Deep Q-Network that learns the optimal CPU/GPU/Hybrid scheduling policy online |
-| **Rule-Based Fallback** | Ensures safe operation via threshold-based decisions before the RL agent has trained sufficiently |
+- Inefficient resource utilization
+- Increased processing latency
+- Reduced throughput
+- Performance bottlenecks during peak workloads
 
-### Processing Modes
-
-- **🎬 Video Mode** — Real-time frame-by-frame processing from webcam or video file
-- **🖼️ Image Mode** — Batch/single image processing with 7 built-in tasks
-- **🌐 Web Dashboard** — Flask-based UI with drag-and-drop upload, live stats, and before/after comparison
-
-> **Everything runs locally** — no cloud APIs, no external datasets, no internet required.
+This project addresses these issues by implementing an adaptive scheduling mechanism that intelligently distributes workloads across available computing resources.
 
 ---
 
-## ✨ Key Features
+## 🚀 Key Features
 
-| Category | Capability | Details |
-|---|---|---|
-| **Input** | Video capture | Webcam or video file via OpenCV |
-| | Image processing | Single images or batch directory processing |
-| **Processing** | 7 image tasks | Resize, blur, sharpen, edge detection, denoise, histogram equalisation, style transfer |
-| **Intelligence** | Feature extraction | Motion / edges / brightness (video); resolution / edges / colour / brightness (image) |
-| | Complexity prediction | Lightweight LSTM over a sliding window of features |
-| | Temporal smoothing | Exponential moving average on complexity scores |
-| | System monitoring | Real-time CPU / GPU utilisation and queue tracking |
-| **Scheduling** | RL scheduling | DQN with experience replay buffer and target network |
-| | Rule-based fallback | Guarantees safe decisions when DQN is untrained |
-| **Execution** | Workers | Separate CPU, GPU, and hybrid processing workers |
-| **Observability** | Live metrics | Per-frame latency, FPS, complexity, and ε-greedy stats |
-| | Online learning | DQN trains continuously as frames/images arrive |
-| | Web dashboard | Flask UI with video/image upload, live SSE stats, and before/after comparison |
+- ✅ Adaptive CPU/GPU task scheduling
+- ✅ Real-time video processing
+- ✅ Image processing support
+- ✅ Deep Reinforcement Learning (DQN)
+- ✅ LSTM-based complexity prediction
+- ✅ Live CPU/GPU monitoring
+- ✅ Dynamic workload balancing
+- ✅ Flask-based web dashboard
+- ✅ Online learning and optimization
+- ✅ CPU, GPU, and Hybrid execution modes
 
 ---
 
-## 🏗️ Architecture
+## 🔄 Workflow
 
-```
-┌────────────┐    ┌──────────────────┐    ┌────────────┐
-│  Webcam /  │───>│ Feature Extraction│───>│   Scaling  │
-│  Video /   │    │ (motion/edges/   │    │ (Min-Max)  │
-│  Images    │    │  brightness/     │    └─────┬──────┘
-└────────────┘    │  colour/res)     │          │
-                  └──────────────────┘          v
-                  ┌──────────────────┐    ┌────────────┐
-                  │  LSTM Complexity │<───│  Sequence  │
-                  │  Predictor       │    │  Buffer    │
-                  └───────┬──────────┘    └────────────┘
-                          │
-                          v
-                  ┌──────────────────┐
-                  │    Temporal      │
-                  │    Smoothing     │
-                  └───────┬──────────┘
-                          │
-                          v
-         ┌────────────────────────────────┐
-         │         State Builder          │
-         │ [complexity, cpu, gpu, queue]  │
-         └───────────────┬────────────────┘
-                         │
-                         v
-              ┌─────────────────────┐
-              │   DQN Scheduler     │
-              │ (or fallback rules) │
-              └──────┬──────────────┘
-                     │
-          ┌──────────┼──────────┐
-          v          v          v
-      ┌───────┐ ┌───────┐ ┌────────┐
-      │  CPU  │ │  GPU  │ │ Hybrid │
-      │Worker │ │Worker │ │ Worker │
-      └───┬───┘ └───┬───┘ └───┬────┘
-          └──────────┼─────────┘
-                     v
-              ┌─────────────┐
-              │   Metrics   │──> Reward ──> DQN Training
-              │ (latency,   │
-              │  FPS)       │
-              └─────────────┘
+```text
+Input Video/Image
+        │
+        ▼
+Feature Extraction
+        │
+        ▼
+Complexity Prediction (LSTM)
+        │
+        ▼
+Resource Monitoring
+        │
+        ▼
+DQN Scheduler
+   ┌────┼────┐
+   ▼    ▼    ▼
+ CPU   GPU Hybrid
+   │    │    │
+   └────┴────┘
+        ▼
+Processed Output
+        │
+        ▼
+Reward Calculation
+        │
+        ▼
+Continuous Learning
 ```
 
 ---
 
-## ⚙️ How It Works
+## 🏗️ System Architecture
 
-### 🎬 Video Mode Pipeline
-
-1. **Capture** — A frame is grabbed from the webcam or video file
-2. **Feature Extraction** — Motion, Canny edge density, and brightness computed
-3. **Scaling** — Features normalised to `[0, 1]` with online min-max scaling
-4. **LSTM Prediction** — Complexity score `∈ [0, 1]` predicted from temporal sequence
-5. **Temporal Smoothing** — Exponential moving average applied to reduce noise
-6. **State Construction** — Complexity + system metrics → RL state vector
-7. **Scheduling Decision** — DQN selects CPU / GPU / Hybrid (or fallback rules if untrained)
-8. **Execution** — Selected worker processes the frame
-9. **Metrics & Reward** — Latency/FPS measured, reward computed
-10. **Learning** — DQN trained via mini-batch gradient descent from replay buffer
-
-### 🖼️ Image Mode Pipeline
-
-1. **Load** — Image(s) loaded from file or directory
-2. **Feature Extraction** — Resolution complexity, edge density, colour variance, brightness
-3. **Scheduling** — Same LSTM → DQN pipeline selects the optimal worker
-4. **Task Execution** — Selected worker runs the chosen task (sharpen, blur, etc.)
-5. **Save** — Processed images saved to `output/images/`
-6. **Learning** — Same RL training loop continues online
+```text
+┌──────────────┐
+│ Video/Image  │
+│    Input     │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────┐
+│ Feature Extraction│
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ LSTM Complexity  │
+│    Predictor     │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ Resource Monitor │
+│ CPU / GPU Status │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│  DQN Scheduler   │
+└───┬────┬─────┬───┘
+    │    │     │
+    ▼    ▼     ▼
+  CPU   GPU  Hybrid
+ Worker Worker Worker
+    │    │     │
+    └────┴─────┘
+          │
+          ▼
+     Processed Data
+          │
+          ▼
+    Reward Function
+          │
+          ▼
+      DQN Training
+```
 
 ---
 
-## 🖼️ Image Processing Tasks
+## 🎬 Processing Modes
 
-| Task | Description | CPU Implementation | GPU Implementation |
-|---|---|---|---|
-| **Resize** | Scale to target dimensions | `cv2.resize` | `F.interpolate` |
-| **Blur** | Gaussian blur | `cv2.GaussianBlur` | Separable conv2d |
-| **Sharpen** | Enhance edges | Laplacian kernel | Unsharp mask |
-| **Edge Detection** | Extract edges | Canny | Sobel via conv2d |
-| **Denoise** | Reduce noise | Non-local means | Averaging + blend |
-| **Histogram Eq** | Normalise contrast | Per-channel equalise | CDF-based tensor ops |
-| **Style Transfer** | Artistic effect | Bilateral + quantise | Quantise + edge overlay |
+### 1. Video Mode
 
----
+Real-time frame processing from:
 
-## 🚀 Installation
+- Webcam
+- Video files
 
-### Prerequisites
+Features:
 
-- **Python 3.8+**
-- **pip** (Python package manager)
-- A **webcam** (optional, for live video mode)
-- **NVIDIA GPU + CUDA** (optional, for GPU acceleration — falls back to CPU automatically)
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/adaptive-cpu-gpu-scheduler.git
-cd adaptive-cpu-gpu-scheduler
-
-# Create a virtual environment (recommended)
-python -m venv venv
-
-# Activate the virtual environment
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux / macOS
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Dependencies
-
-| Package | Purpose |
-|---|---|
-| `opencv-python` | Video/image capture and processing |
-| `torch` | Deep learning (LSTM, DQN) |
-| `numpy` | Numerical operations |
-| `psutil` | System monitoring (CPU/memory) |
-| `flask` | Web dashboard server |
-| `Pillow` | Image format support |
+- Frame-by-frame scheduling
+- Live latency tracking
+- FPS monitoring
+- Dynamic CPU/GPU allocation
 
 ---
-
-## 🎯 Usage
-
-### 1. Video Mode (Default)
-
-Process video frames in real time with adaptive scheduling:
-
-```bash
-python main.py
-```
-
-- Press **`q`** in the OpenCV window or **`Ctrl+C`** in the terminal to stop
-- Console outputs per-frame stats: action, complexity, latency, FPS, ε, and training steps
-
-To use a video file instead of the webcam, edit `config/config.py`:
-
-```python
-VIDEO_SOURCE = "path/to/your/video.mp4"   # or 0 for webcam
-```
 
 ### 2. Image Mode
 
-Process single images or batch directories:
+Supports:
 
-```python
-# In config/config.py:
-PROCESSING_MODE = "image"
-IMAGE_SOURCE = "images/"             # path to image file or directory
-DEFAULT_IMAGE_TASK = "sharpen"       # resize | blur | sharpen | edge_detect | denoise | histogram_eq | style_transfer
-```
+- Single image processing
+- Batch image processing
 
-```bash
-python main.py
-```
+Available operations:
 
-Processed images are saved to `output/images/`.
+- Resize
+- Blur
+- Sharpen
+- Edge Detection
+- Denoise
+- Histogram Equalization
+- Style Transfer
+
+---
 
 ### 3. Web Dashboard
 
-Launch the interactive web interface:
+Features:
 
-```bash
-python dashboard.py
-```
-
-Open **http://localhost:5000** in your browser. The dashboard supports:
-
-| Feature | Description |
-|---|---|
-| 📤 **Upload Video** | Drag & drop MP4 for processing with live frame-by-frame stats |
-| 📹 **Live Webcam** | Real-time webcam feed with adaptive scheduling |
-| 🖼️ **Image Processing** | Upload an image, select a task, view before/after comparison |
-| 📊 **Live Stats** | Real-time SSE streaming of scheduling metrics |
-| 🏗️ **Pipeline View** | Visual architecture diagram at `/pipeline` |
+- Upload videos and images
+- Live monitoring
+- Resource statistics
+- Before/After image comparison
+- Processing analytics
 
 ---
 
-## 🛠️ Configuration
+## 🖼️ Supported Image Processing Tasks
 
-All hyperparameters are centralized in [`config/config.py`](config/config.py):
-
-| Parameter | Default | Description |
-|---|---|---|
-| `VIDEO_SOURCE` | `"sample.mp4"` | `0` for webcam, or path to video file |
-| `PROCESSING_MODE` | `"video"` | `"video"` or `"image"` |
-| `SEQUENCE_LENGTH` | `10` | LSTM temporal window size |
-| `SMOOTHING_ALPHA` | `0.3` | Exponential smoothing factor |
-| `NUM_ACTIONS` | `3` | CPU / GPU / Hybrid |
-| `DQN_HIDDEN_SIZE` | `128` | DQN network capacity |
-| `DQN_LR` | `1.5e-3` | DQN learning rate |
-| `DQN_GAMMA` | `0.99` | Discount factor |
-| `EPSILON_DECAY` | `250` | Exploration decay rate |
-| `REPLAY_CAPACITY` | `5000` | Experience replay buffer size |
-| `BATCH_SIZE` | `64` | Training mini-batch size |
-| `FALLBACK_CONFIDENCE` | `40` | Steps before trusting DQN over rules |
-| `DEFAULT_IMAGE_TASK` | `"sharpen"` | Default image processing task |
+| Task | Description |
+|--------|-------------|
+| Resize | Scale image dimensions |
+| Blur | Gaussian blur filtering |
+| Sharpen | Enhance image details |
+| Edge Detection | Detect object boundaries |
+| Denoise | Remove image noise |
+| Histogram Equalization | Improve contrast |
+| Style Transfer | Apply artistic effects |
 
 ---
 
-## 📁 Project Structure
+## 🛠️ Technology Stack
 
-```
+| Technology | Purpose |
+|------------|----------|
+| Python | Core Development |
+| PyTorch | Deep Learning Models |
+| OpenCV | Video & Image Processing |
+| Flask | Web Dashboard |
+| NumPy | Numerical Computation |
+| Pillow | Image Handling |
+| psutil | System Monitoring |
+
+---
+
+## 📂 Project Structure
+
+```text
 adaptive-cpu-gpu-scheduler/
 │
 ├── config/
-│   └── config.py                  # All hyperparameters and settings
+│   └── config.py
 │
-├── pipeline/                      # Core video processing pipeline
-│   ├── frame_capture.py           # Video frame source (webcam / file)
-│   ├── image_capture.py           # Image file / directory source
-│   ├── feature_extraction.py      # Video feature extraction (motion, edges, brightness)
-│   ├── scaling.py                 # Online min-max normalisation
-│   ├── smoothing.py               # Exponential temporal smoothing
-│   ├── state_builder.py           # RL state vector construction
-│   └── scheduler.py               # DQN + fallback rule-based scheduler
+├── pipeline/
+│   ├── feature_extraction.py
+│   ├── scheduler.py
+│   ├── state_builder.py
+│   └── smoothing.py
 │
-├── image_processing/              # Image-specific processing
-│   ├── tasks.py                   # 7 image tasks (CPU + GPU implementations)
-│   └── feature_extraction.py      # Image-specific feature extraction
+├── execution/
+│   ├── cpu_worker.py
+│   ├── gpu_worker.py
+│   └── hybrid_worker.py
 │
-├── execution/                     # Processing workers
-│   ├── cpu_worker.py              # CPU processing worker
-│   ├── gpu_worker.py              # GPU processing worker (PyTorch)
-│   └── hybrid_worker.py           # Hybrid CPU+GPU worker
+├── models/
+│   ├── lstm_model.py
+│   └── dqn_model.py
 │
-├── models/                        # Neural network models
-│   ├── lstm_model.py              # LSTM complexity predictor
-│   ├── dqn_model.py               # DQN Q-network
-│   └── checkpoint/                # Saved model weights
+├── rl/
+│   ├── train.py
+│   ├── reward.py
+│   └── memory.py
 │
-├── rl/                            # Reinforcement learning
-│   ├── train.py                   # DQN trainer with target network sync
-│   ├── reward.py                  # Reward function (latency + FPS)
-│   └── memory.py                  # Experience replay buffer
+├── dashboard/
+│   └── dashboard.py
 │
-├── utils/                         # Utilities
-│   ├── metrics.py                 # FPS / latency tracking
-│   ├── monitor.py                 # System resource monitoring (CPU/GPU)
-│   └── logger.py                  # Logging configuration
-│
-├── templates/                     # Web dashboard templates
-│   ├── dashboard.html             # Main dashboard UI
-│   └── pipeline.html              # Pipeline architecture visualisation
-│
-├── main.py                        # CLI entry point
-├── dashboard.py                   # Flask web server
-├── requirements.txt               # Python dependencies
-├── sample.mp4                     # Sample video for testing
+├── main.py
+├── requirements.txt
+├── README.md
 └── .gitignore
 ```
 
 ---
 
-## 🧰 Tech Stack
+## ⚙️ Installation
 
-| Technology | Usage |
-|---|---|
-| **Python 3.8+** | Core language |
-| **PyTorch** | LSTM complexity predictor, DQN agent, GPU tensor operations |
-| **OpenCV** | Video capture, image I/O, CPU-based image processing |
-| **NumPy** | Feature computation, array operations |
-| **Flask** | Web dashboard with SSE streaming |
-| **psutil** | Real-time CPU / memory monitoring |
-| **Pillow** | Extended image format support |
+### Clone Repository
+
+```bash
+git clone https://github.com/your-username/adaptive-cpu-gpu-scheduler.git
+
+cd adaptive-cpu-gpu-scheduler
+```
+
+### Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+### Activate Environment
+
+#### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+#### Linux/macOS
+
+```bash
+source venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## 🔮 Future Improvements
+## ▶️ Running the Project
 
-- [ ] **GPU utilisation via `pynvml`** — Real NVIDIA GPU load monitoring for better state representation
-- [ ] **Multi-stream support** — Schedule across multiple concurrent video feeds
-- [ ] **Prioritised experience replay** — Faster DQN convergence by sampling high-error transitions
-- [ ] **Model checkpointing** — Automatic save/resume on restart with best-model tracking
-- [ ] **A3C / PPO** — Alternative RL algorithms for potentially better scheduling policies
-- [ ] **Adaptive frame skipping** — Skip redundant frames based on predicted complexity
-- [ ] **Batch image processing** — Parallel image processing via the web dashboard
+### Video Mode
+
+```bash
+python main.py
+```
+
+### Web Dashboard
+
+```bash
+python dashboard.py
+```
+
+Open:
+
+```text
+http://localhost:5000
+```
+
+---
+
+## 📈 Future Improvements
+
+- Multi-GPU Scheduling
+- PPO-Based Reinforcement Learning
+- Distributed Resource Scheduling
+- Kubernetes Integration
+- Cloud-Edge Hybrid Scheduling
+- Advanced Workload Prediction
+- Model Checkpointing
+
+---
+
+## 📊 Expected Benefits
+
+- Improved resource utilization
+- Reduced processing latency
+- Better workload balancing
+- Increased throughput
+- Adaptive real-time optimization
 
 ---
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the MIT License.
 
 ---
 
 <p align="center">
-  Made with ❤️ using PyTorch, OpenCV, and Reinforcement Learning
+  Made with ❤️ using Python, PyTorch, OpenCV, and Reinforcement Learning
 </p>
-]]>
